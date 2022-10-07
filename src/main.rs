@@ -1,5 +1,4 @@
 pub mod chunk;
-pub mod memory;
 
 use chunk::{Chunk, OpCode};
 
