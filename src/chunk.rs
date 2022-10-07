@@ -2,28 +2,25 @@ use std::fmt;
 
 #[derive(Debug)]
 pub enum OpCode {
-    OpReturn
+    OpReturn,
 }
 
 impl fmt::Display for OpCode {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
-            OpCode::OpReturn => f.pad("OP_RETURN")
+            OpCode::OpReturn => f.pad("OP_RETURN"),
         }
     }
 }
 
-
 #[derive(Debug)]
 pub struct Chunk {
-    code: Vec<OpCode>
+    code: Vec<OpCode>,
 }
 
 impl Chunk {
     pub fn init() -> Chunk {
-        Chunk {
-            code: vec![]
-        }
+        Chunk { code: vec![] }
     }
 
     pub fn write(&mut self, byte: OpCode) {
