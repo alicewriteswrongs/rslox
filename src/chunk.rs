@@ -70,6 +70,10 @@ impl Chunk {
         self.constants.len() - 1
     }
 
+    pub fn get_constant(&self, index: usize) -> Value {
+        self.constants[index]
+    }
+
     fn get_line_number(&self, index: usize) -> Option<i32> {
         self.lines
             .iter()
@@ -91,27 +95,29 @@ impl Chunk {
     pub fn disassemble(&self, name: &str) {
         println!("== {} ==", name);
 
-        println!("{:?}", self);
-
         for (i, opcode) in self.code.iter().enumerate() {
-            match opcode {
-                OpCode::OpConstant(index) => {
-                    println!(
-                        "{:0>4} {} {} '{}'",
-                        i,
-                        self.get_line_number(i).unwrap_or(-1),
-                        OpCode::OpConstant(*index),
-                        self.constants[*index]
-                    );
-                }
-                OpCode::OpReturn => {
-                    println!(
-                        "{:0>4} {} {} ",
-                        i,
-                        self.get_line_number(i).unwrap_or(-1),
-                        OpCode::OpReturn
-                    );
-                }
+            self.disassemble_instruction(i, opcode);
+        }
+    }
+
+    pub fn disassemble_instruction(&self, i: usize, opcode: &OpCode) {
+        match opcode {
+            OpCode::OpConstant(index) => {
+                println!(
+                    "{:0>4} {} {} '{}'",
+                    i,
+                    self.get_line_number(i).unwrap_or(-1),
+                    OpCode::OpConstant(*index),
+                    self.constants[*index]
+                );
+            }
+            OpCode::OpReturn => {
+                println!(
+                    "{:0>4} {} {} ",
+                    i,
+                    self.get_line_number(i).unwrap_or(-1),
+                    OpCode::OpReturn
+                );
             }
         }
     }
