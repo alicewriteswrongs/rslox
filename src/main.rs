@@ -21,6 +21,6 @@ fn main() {
         chunk.disassemble("test chunk");
     }
 
-    let mut vm = VM::init(&chunk);
+    let vm = VM::init(&chunk);
     vm.interpret();
 }

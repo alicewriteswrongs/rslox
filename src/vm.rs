@@ -25,8 +25,8 @@ impl VM<'_> {
         }
     }
 
-    pub fn interpret(&mut self) -> InterpretResult {
-        self.ip = Cell::new(Some(0));
+    pub fn interpret(&self) -> InterpretResult {
+        self.ip.set(Some(0));
         self.run()
     }
 
