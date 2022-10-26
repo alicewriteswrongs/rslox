@@ -98,6 +98,8 @@ impl Chunk {
         for (i, opcode) in self.code.iter().enumerate() {
             self.disassemble_instruction(i, opcode);
         }
+
+        println!("== end chunk ==");
     }
 
     pub fn disassemble_instruction(&self, i: usize, opcode: &OpCode) {

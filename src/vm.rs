@@ -1,6 +1,7 @@
 use crate::chunk::{Chunk, OpCode};
+use crate::value::Value;
 use log::{log_enabled, Level};
-use std::cell::Cell;
+use std::cell::{Cell, RefCell};
 
 pub struct VM<'a> {
     chunk: &'a Chunk,
@@ -9,6 +10,7 @@ pub struct VM<'a> {
     // `&mut self` references, which would _also_ make `self.chunk` actually `&mut Chunk`, causing
     // a lot of problems when we try to call methods on it.
     ip: Cell<Option<usize>>,
+    stack: RefCell<Vec<Value>>,
 }
 
 pub enum InterpretResult {
@@ -22,6 +24,7 @@ impl VM<'_> {
         VM {
             chunk,
             ip: Cell::new(None),
+            stack: RefCell::new(vec![]),
         }
     }
 
@@ -34,15 +37,24 @@ impl VM<'_> {
         while let Some((opcode, index)) = self.read_byte() {
             if log_enabled!(Level::Debug) {
                 let opcode = opcode.clone();
-                self.chunk.disassemble_instruction(index, opcode)
+                self.print_stack();
+                self.chunk.disassemble_instruction(index, opcode);
             }
 
             match opcode {
-                OpCode::OpReturn => break,
+                OpCode::OpReturn => {
+                    let mut stack = self.stack.borrow_mut();
+                    let value = stack.pop();
+
+                    if let Some(val) = value {
+                        println!("{}", val);
+                    }
+                }
                 OpCode::OpConstant(index) => {
                     let index = *index;
                     let value = self.chunk.constants[index];
-                    println!("{}", value);
+                    let mut stack = self.stack.borrow_mut();
+                    stack.push(value);
                 }
             };
         }
@@ -55,5 +67,9 @@ impl VM<'_> {
             self.ip.set(Some(index + 1));
             self.chunk.code.get(index).map(|opcode| (opcode, index))
         })
+    }
+
+    fn print_stack(&self) {
+        println!("Stack: {:?}", self.stack.borrow());
     }
 }
