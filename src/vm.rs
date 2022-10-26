@@ -36,7 +36,6 @@ impl VM<'_> {
     fn run(&self) -> InterpretResult {
         while let Some((opcode, index)) = self.read_byte() {
             if log_enabled!(Level::Debug) {
-                let opcode = opcode.clone();
                 self.print_stack();
                 self.chunk.disassemble_instruction(index, opcode);
             }
