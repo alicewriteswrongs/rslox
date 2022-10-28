@@ -49,6 +49,18 @@ impl VM<'_> {
                         println!("{}", val);
                     }
                 }
+                OpCode::OpNegate => {
+                    let mut stack = self.stack.borrow_mut();
+                    if let Some(num) = stack.pop() {
+                        stack.push(-num);
+                    } else {
+                        // TODO do something more sensible here
+                        panic!(
+                            "{}",
+                            format!("I tried to negate something that wasn't there :/")
+                        )
+                    }
+                }
                 OpCode::OpConstant(index) => {
                     let index = *index;
                     let value = self.chunk.constants[index];

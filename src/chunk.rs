@@ -6,6 +6,7 @@ use crate::value::Value;
 pub enum OpCode {
     // the usize here is the index
     OpConstant(usize),
+    OpNegate,
     OpReturn,
 }
 
@@ -13,6 +14,7 @@ impl fmt::Display for OpCode {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
             OpCode::OpReturn => f.pad("OP_RETURN"),
+            OpCode::OpNegate => f.pad("OP_NEGATE"),
             OpCode::OpConstant(value) => f.pad(&format!("OP_CONSTANT: {}", value)),
         }
     }
@@ -113,14 +115,18 @@ impl Chunk {
                     self.constants[*index]
                 );
             }
-            OpCode::OpReturn => {
-                println!(
-                    "{:0>4} {} {} ",
-                    i,
-                    self.get_line_number(i).unwrap_or(-1),
-                    OpCode::OpReturn
-                );
-            }
+            OpCode::OpNegate => self.print_simple_instruction(i, opcode),
+            OpCode::OpReturn => self.print_simple_instruction(i, opcode),
         }
+    }
+
+    // private functions
+    fn print_simple_instruction(&self, index: usize, opcode: &OpCode) {
+        println!(
+            "{:0>4} {} {} ",
+            index,
+            self.get_line_number(index).unwrap_or(-1),
+            opcode
+        );
     }
 }
