@@ -14,6 +14,17 @@ fn main() {
 
     let index = chunk.add_constant(1.2);
     chunk.write(OpCode::OpConstant(index), 123);
+
+    let index = chunk.add_constant(3.4);
+    chunk.write(OpCode::OpConstant(index), 123);
+
+    chunk.write(OpCode::OpAdd, 123);
+
+    let index = chunk.add_constant(5.6);
+    chunk.write(OpCode::OpConstant(index), 123);
+
+    chunk.write(OpCode::OpDivide, 123);
+
     chunk.write(OpCode::OpNegate, 123);
     chunk.write(OpCode::OpReturn, 123);
     chunk.end_line_parsing();

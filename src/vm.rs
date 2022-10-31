@@ -19,6 +19,17 @@ pub enum InterpretResult {
     RuntimeError,
 }
 
+macro_rules! binary_op{
+    ($self:ident, $op:tt)=> {
+        {
+            let mut stack = $self.stack.borrow_mut();
+            let b = stack.pop().unwrap();
+            let a = stack.pop().unwrap();
+            stack.push(a $op b);
+        }
+    }
+}
+
 impl VM<'_> {
     pub fn init(chunk: &Chunk) -> VM {
         VM {
@@ -49,6 +60,10 @@ impl VM<'_> {
                         println!("{}", val);
                     }
                 }
+                OpCode::OpAdd => binary_op!(self, +),
+                OpCode::OpSubtract => binary_op!(self, -),
+                OpCode::OpMultiply => binary_op!(self, *),
+                OpCode::OpDivide => binary_op!(self, /),
                 OpCode::OpNegate => {
                     let mut stack = self.stack.borrow_mut();
                     if let Some(num) = stack.pop() {
