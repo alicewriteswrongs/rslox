@@ -1,38 +1,50 @@
-use log::{log_enabled, Level};
+use anyhow::{anyhow, Result};
+// use log::{log_enabled, Level};
+use std::env::args;
+use std::fs;
+use std::io::{stdin, stdout, BufRead, Write};
 
 pub mod chunk;
+pub mod compiler;
 pub mod value;
 pub mod vm;
 
-use chunk::{Chunk, OpCode};
 use vm::VM;
 
-fn main() {
+fn repl() -> Result<()> {
+    let vm = VM::init();
+
+    loop {
+        // acquire lock on stdout, print our little prompt
+        let mut stdout_lock = stdout().lock();
+        write!(stdout_lock, "> ")?;
+        stdout_lock.flush()?;
+
+        let mut stdin_handle = stdin().lock();
+        let mut buffer = String::new();
+        stdin_handle.read_line(&mut buffer)?;
+        vm.interpret(&buffer);
+    }
+}
+
+fn run_file(filename: &String) -> Result<()> {
+    let source = fs::read_to_string(filename)?;
+    let vm = VM::init();
+    vm.interpret(&source);
+    Ok(())
+}
+
+fn main() -> Result<()> {
     env_logger::init();
 
-    let mut chunk = Chunk::init();
+    let arguments: Vec<String> = args().collect();
 
-    let index = chunk.add_constant(1.2);
-    chunk.write(OpCode::OpConstant(index), 123);
-
-    let index = chunk.add_constant(3.4);
-    chunk.write(OpCode::OpConstant(index), 123);
-
-    chunk.write(OpCode::OpAdd, 123);
-
-    let index = chunk.add_constant(5.6);
-    chunk.write(OpCode::OpConstant(index), 123);
-
-    chunk.write(OpCode::OpDivide, 123);
-
-    chunk.write(OpCode::OpNegate, 123);
-    chunk.write(OpCode::OpReturn, 123);
-    chunk.end_line_parsing();
-
-    if log_enabled!(Level::Debug) {
-        chunk.disassemble("test chunk");
+    match arguments.len() {
+        1 => repl(),
+        2 => run_file(&arguments[1]),
+        _ => {
+            // log::error!("Usage: rslox [path]\n");
+            Err(anyhow!("Usage: rslox [path]\n"))
+        }
     }
-
-    let vm = VM::init(&chunk);
-    vm.interpret();
 }

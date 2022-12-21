@@ -1,14 +1,13 @@
 use crate::chunk::{Chunk, OpCode};
+use crate::compiler::compile;
 use crate::value::Value;
 use log::{log_enabled, Level};
 use std::cell::{Cell, RefCell};
 
-pub struct VM<'a> {
-    chunk: &'a Chunk,
+pub struct VM {
     // ip stands for 'instruction pointer' and stores a pointer to the current `OpCode`. We want to
     // wrap it in a `Cell` because we need to be able to mutate it, but we don't want to deal with
-    // `&mut self` references, which would _also_ make `self.chunk` actually `&mut Chunk`, causing
-    // a lot of problems when we try to call methods on it.
+    // `&mut self` references.
     ip: Cell<Option<usize>>,
     stack: RefCell<Vec<Value>>,
 }
@@ -30,25 +29,26 @@ macro_rules! binary_op{
     }
 }
 
-impl VM<'_> {
-    pub fn init(chunk: &Chunk) -> VM {
+impl VM {
+    pub fn init() -> VM {
         VM {
-            chunk,
             ip: Cell::new(None),
             stack: RefCell::new(vec![]),
         }
     }
 
-    pub fn interpret(&self) -> InterpretResult {
+    pub fn interpret(&self, source: &String) -> InterpretResult {
+        let chunk = compile(source);
         self.ip.set(Some(0));
-        self.run()
+        self.run(&chunk)
     }
 
-    fn run(&self) -> InterpretResult {
-        while let Some((opcode, index)) = self.read_byte() {
+    // private, VM-use only functions
+    fn run(&self, chunk: &Chunk) -> InterpretResult {
+        while let Some((opcode, index)) = self.read_byte(chunk) {
             if log_enabled!(Level::Debug) {
                 self.print_stack();
-                self.chunk.disassemble_instruction(index, opcode);
+                chunk.disassemble_instruction(index, opcode);
             }
 
             match opcode {
@@ -78,7 +78,7 @@ impl VM<'_> {
                 }
                 OpCode::OpConstant(index) => {
                     let index = *index;
-                    let value = self.chunk.constants[index];
+                    let value = chunk.constants[index];
                     let mut stack = self.stack.borrow_mut();
                     stack.push(value);
                 }
@@ -87,11 +87,10 @@ impl VM<'_> {
         InterpretResult::Ok
     }
 
-    // private, VM-use only functions
-    fn read_byte(&self) -> Option<(&OpCode, usize)> {
+    fn read_byte<'a>(&'a self, chunk: &'a Chunk) -> Option<(&OpCode, usize)> {
         self.ip.take().and_then(|index| {
             self.ip.set(Some(index + 1));
-            self.chunk.code.get(index).map(|opcode| (opcode, index))
+            chunk.code.get(index).map(|opcode| (opcode, index))
         })
     }
 
