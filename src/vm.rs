@@ -37,8 +37,8 @@ impl VM {
         }
     }
 
-    pub fn interpret(&self, source: &String) -> InterpretResult {
-        let chunk = compile(source);
+    pub fn interpret(&self, source: &str) -> InterpretResult {
+        let chunk = compile(source).unwrap();
         self.ip.set(Some(0));
         self.run(&chunk)
     }

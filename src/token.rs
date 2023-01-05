@@ -1,4 +1,5 @@
-pub enum TokenType {
+#[derive(Debug, PartialEq)]
+pub enum Token {
     // Single-character tokens.
     LeftParen,
     RightParen,
@@ -11,6 +12,7 @@ pub enum TokenType {
     Semicolon,
     Slash,
     Star,
+
     // One or two character tokens.
     Bang,
     BangEqual,
@@ -20,10 +22,12 @@ pub enum TokenType {
     GreaterEqual,
     Less,
     LessEqual,
+
     // Literals.
-    Identifier,
-    String,
-    Number,
+    Identifier(String),
+    String(String),
+    Number(f64),
+
     // Keywords.
     And,
     Class,
@@ -41,14 +45,15 @@ pub enum TokenType {
     True,
     Var,
     While,
+
     // Utility
     Error,
     EOF,
 }
 
-pub struct Token {
-    token_type: TokenType,
-    line: i32,
-    // length: usize,
-    // start: usize,
+pub struct TokenInfo {
+    pub token: Token,
+    pub line: i32,
+    // should store the source string?
+    // source: String
 }

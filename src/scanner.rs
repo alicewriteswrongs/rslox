@@ -1,82 +1,154 @@
-use crate::token::Token;
-use crate::token::TokenType;
-use std::cell::{Cell, RefCell};
-use std::collections::VecDeque;
+use crate::token::{Token, TokenInfo};
+use std::cell::Cell;
+use std::iter::Peekable;
+use std::str::Chars;
 
-struct Scanner {
-    // start: &'a char,
-    // current: &'a char,
+pub struct Scanner<'a> {
     line: Cell<i32>,
-    chars: RefCell<VecDeque<char>>,
-    state: Cell<ScannerState>,
+    chars: Peekable<Chars<'a>>,
 }
 
-enum ScannerState {
-    Ready,
-    ParsingToken(String),
-    ParsingWhitespace,
-}
-
-impl Scanner {
-    pub fn init(source: &String) -> Scanner {
-        let chars: VecDeque<char> = source.chars().collect();
-
+impl<'a> Scanner<'a> {
+    pub fn init(source: &str) -> Scanner {
         Scanner {
-            chars: RefCell::new(chars),
+            chars: source.chars().peekable(),
             line: Cell::new(0),
-            state: Cell::new(ScannerState::Ready),
         }
     }
 
-    pub fn scan_token(&self) -> Token {
+    pub fn scan_token(&mut self) -> TokenInfo {
+        self.skip_whitespace();
+
         if self.is_at_end() {
-            return self.create_token(TokenType::EOF);
+            return self.create_token(Token::EOF);
         }
 
-        if let Some(c) = self.chars.borrow_mut().pop_front() {
+        if let Some(c) = self.chars.next() {
             return match c {
-                '(' => self.create_token(TokenType::LeftParen),
-                ')' => self.create_token(TokenType::RightParen),
-                '{' => self.create_token(TokenType::LeftBrace),
-                '}' => self.create_token(TokenType::RightBrace),
-                ';' => self.create_token(TokenType::Semicolon),
-                ',' => self.create_token(TokenType::Comma),
-                '.' => self.create_token(TokenType::Dot),
-                '-' => self.create_token(TokenType::Minus),
-                '+' => self.create_token(TokenType::Plus),
-                '/' => self.create_token(TokenType::Slash),
-                '*' => self.create_token(TokenType::Star),
-                '!' => self.create_token(match self.matches('=') {
-                    true => TokenType::BangEqual,
-                    false => TokenType::Bang,
-                }),
+                '(' => self.create_token(Token::LeftParen),
+                ')' => self.create_token(Token::RightParen),
+                '{' => self.create_token(Token::LeftBrace),
+                '}' => self.create_token(Token::RightBrace),
+                ';' => self.create_token(Token::Semicolon),
+                ',' => self.create_token(Token::Comma),
+                '.' => self.create_token(Token::Dot),
+                '-' => self.create_token(Token::Minus),
+                '+' => self.create_token(Token::Plus),
+                '/' => self.create_token(Token::Slash),
+                '*' => self.create_token(Token::Star),
+                '!' => {
+                    let has_double_equal = self.matches('=');
+                    self.create_token(match has_double_equal {
+                        true => Token::BangEqual,
+                        false => Token::Bang,
+                    })
+                }
+                '=' => {
+                    let has_double_equal = self.matches('=');
+                    self.create_token(match has_double_equal {
+                        true => Token::EqualEqual,
+                        false => Token::Equal,
+                    })
+                }
+                '<' => {
+                    let has_double_equal = self.matches('=');
+                    self.create_token(match has_double_equal {
+                        true => Token::LessEqual,
+                        false => Token::Less,
+                    })
+                }
+                '>' => {
+                    let has_double_equal = self.matches('=');
+                    self.create_token(match has_double_equal {
+                        true => Token::GreaterEqual,
+                        false => Token::Greater,
+                    })
+                }
+                '"' => self.string(),
                 _ => todo!(),
             };
         }
 
-        self.create_token(TokenType::Error)
+        self.create_token(Token::Error)
     }
 
     /// provide one character of consume-if-matching lookahead
-    fn matches(&self, c: char) -> bool {
-        if let Some(t) = self.chars.borrow().get(0) {
-            if *t == c {
-                self.chars.borrow_mut().pop_front();
+    fn matches(&mut self, c: char) -> bool {
+        if let Some(t) = self.peek() {
+            if t == c {
+                self.advance();
                 return true;
             }
         }
-        return false;
+        false
     }
 
-    fn is_at_end(&self) -> bool {
-        self.chars.borrow().len() == 0
+    fn advance(&mut self) {
+        self.chars.next();
     }
 
-    fn create_token(&self, token_type: TokenType) -> Token {
-        // we're producing a token, so back to the 'ready' state
-        self.state.set(ScannerState::Ready);
-        Token {
-            token_type,
+    fn peek(&mut self) -> Option<char> {
+        self.chars.peek().copied()
+    }
+
+    fn skip_whitespace(&mut self) {
+        while let Some(c) = self.peek() {
+            match c {
+                ' ' | '\r' | 't' => {
+                    self.advance();
+                }
+                '\n' => {
+                    self.advance();
+                    self.line.set(self.line.get() + 1);
+                }
+                '/' => {
+                    self.advance();
+                    if self.matches('/') {
+                        while let Some(c) = self.peek() {
+                            if c != '\n' && !self.is_at_end() {
+                                self.advance()
+                            } else {
+                                break;
+                            }
+                        }
+                    }
+                }
+                _ => {
+                    break;
+                }
+            }
+        }
+    }
+
+    fn string(&mut self) -> TokenInfo {
+        let mut parsed_string = String::new();
+
+        while let Some(c) = self.peek() {
+            if c == '"' || self.is_at_end() {
+                break;
+            }
+            if c == '\n' {
+                self.line.set(self.line.get() + 1);
+            }
+            parsed_string.push(c);
+            self.advance();
+        }
+
+        if self.is_at_end() {
+            return self.create_token(Token::Error);
+        }
+
+        self.advance();
+        self.create_token(Token::String(parsed_string))
+    }
+
+    fn is_at_end(&mut self) -> bool {
+        self.peek().is_none()
+    }
+
+    fn create_token(&self, token: Token) -> TokenInfo {
+        TokenInfo {
+            token,
             line: self.line.get(),
         }
     }
