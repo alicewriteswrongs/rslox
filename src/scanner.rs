@@ -23,6 +23,10 @@ impl<'a> Scanner<'a> {
             return self.create_token(Token::EOF);
         }
 
+        if self.peek_satisfies(|c| c.is_digit(10)) {
+            return self.number();
+        }
+
         if let Some(c) = self.chars.next() {
             return match c {
                 '(' => self.create_token(Token::LeftParen),
@@ -91,6 +95,16 @@ impl<'a> Scanner<'a> {
         self.chars.peek().copied()
     }
 
+    fn peek_eq(&mut self, c: char) -> bool {
+        self.chars.peek().map_or(false, |p| *p == c)
+    }
+
+    /// Check that the next character matches a supplied predicate, without needing to pull it out
+    /// or do an `unwrap`.
+    fn peek_satisfies(&mut self, test: fn(char) -> bool) -> bool {
+        self.chars.peek().map_or(false, |c| test(*c))
+    }
+
     fn skip_whitespace(&mut self) {
         while let Some(c) = self.peek() {
             match c {
@@ -118,6 +132,26 @@ impl<'a> Scanner<'a> {
                 }
             }
         }
+    }
+
+    fn number(&mut self) -> TokenInfo {
+        let mut digits = String::new();
+
+        while self.peek_satisfies(|c| c.is_digit(10)) {
+            digits.push(self.chars.next().unwrap());
+        }
+
+        if self.peek_eq('.') {
+            digits.push(self.chars.next().unwrap());
+        }
+
+        while self.peek_satisfies(|c| c.is_digit(10)) {
+            digits.push(self.chars.next().unwrap());
+        }
+
+        let num: f64 = digits.parse().unwrap();
+
+        self.create_token(Token::Number(num))
     }
 
     fn string(&mut self) -> TokenInfo {
