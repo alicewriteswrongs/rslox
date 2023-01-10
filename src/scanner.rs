@@ -23,7 +23,11 @@ impl<'a> Scanner<'a> {
             return self.create_token(Token::EOF);
         }
 
-        if self.peek_satisfies(|c| c.is_digit(10)) {
+        if self.peek_satisfies(|c| c.is_alphabetic()) {
+            return self.identifier();
+        }
+
+        if self.peek_satisfies(|c| c.is_ascii_digit()) {
             return self.number();
         }
 
@@ -134,10 +138,21 @@ impl<'a> Scanner<'a> {
         }
     }
 
+    fn identifier(&mut self) -> TokenInfo {
+        let mut parsed_identifier = String::new();
+
+        while self.peek_satisfies(|c| c.is_alphabetic()) || self.peek_satisfies(|c| c.is_ascii_digit())
+        {
+            parsed_identifier.push(self.chars.next().unwrap());
+        }
+
+        self.create_token(Token::Identifier(parsed_identifier))
+    }
+
     fn number(&mut self) -> TokenInfo {
         let mut digits = String::new();
 
-        while self.peek_satisfies(|c| c.is_digit(10)) {
+        while self.peek_satisfies(|c| c.is_ascii_digit()) {
             digits.push(self.chars.next().unwrap());
         }
 
@@ -145,7 +160,7 @@ impl<'a> Scanner<'a> {
             digits.push(self.chars.next().unwrap());
         }
 
-        while self.peek_satisfies(|c| c.is_digit(10)) {
+        while self.peek_satisfies(|c| c.is_ascii_digit()) {
             digits.push(self.chars.next().unwrap());
         }
 
