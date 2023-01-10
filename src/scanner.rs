@@ -1,4 +1,4 @@
-use crate::token::{Token, TokenInfo};
+use crate::token::{check_keyword, Token, TokenInfo};
 use std::cell::Cell;
 use std::iter::Peekable;
 use std::str::Chars;
@@ -141,12 +141,15 @@ impl<'a> Scanner<'a> {
     fn identifier(&mut self) -> TokenInfo {
         let mut parsed_identifier = String::new();
 
-        while self.peek_satisfies(|c| c.is_alphabetic()) || self.peek_satisfies(|c| c.is_ascii_digit())
+        while self.peek_satisfies(|c| c.is_alphabetic())
+            || self.peek_satisfies(|c| c.is_ascii_digit())
         {
             parsed_identifier.push(self.chars.next().unwrap());
         }
 
-        self.create_token(Token::Identifier(parsed_identifier))
+        self.create_token(
+            check_keyword(&parsed_identifier).unwrap_or(Token::Identifier(parsed_identifier)),
+        )
     }
 
     fn number(&mut self) -> TokenInfo {

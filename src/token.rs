@@ -57,3 +57,28 @@ pub struct TokenInfo {
     // should store the source string?
     // source: String
 }
+
+/// Get the keyword token corresponding to an identifier
+///
+/// Returns `None` if the identifier is not a built-in keyword.
+pub fn check_keyword(identifier: &str) -> Option<Token> {
+    match identifier {
+        "and" => Some(Token::And),
+        "class" => Some(Token::Class),
+        "else" => Some(Token::Else),
+        "false" => Some(Token::False),
+        "for" => Some(Token::For),
+        "fun" => Some(Token::Fun),
+        "if" => Some(Token::If),
+        "nil" => Some(Token::Nil),
+        "or" => Some(Token::Or),
+        "print" => Some(Token::Print),
+        "return" => Some(Token::Return),
+        "super" => Some(Token::Super),
+        "this" => Some(Token::This),
+        "true" => Some(Token::True),
+        "var" => Some(Token::Var),
+        "while" => Some(Token::While),
+        _ => None,
+    }
+}
