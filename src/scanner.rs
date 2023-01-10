@@ -141,9 +141,7 @@ impl<'a> Scanner<'a> {
     fn identifier(&mut self) -> TokenInfo {
         let mut parsed_identifier = String::new();
 
-        while self.peek_satisfies(|c| c.is_alphabetic())
-            || self.peek_satisfies(|c| c.is_ascii_digit())
-        {
+        while self.peek_satisfies(|c| c.is_alphabetic() || c.is_ascii_digit()) {
             parsed_identifier.push(self.chars.next().unwrap());
         }
 
