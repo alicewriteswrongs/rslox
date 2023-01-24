@@ -1,4 +1,4 @@
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Clone)]
 pub enum Token {
     // Single-character tokens.
     LeftParen,
@@ -51,6 +51,7 @@ pub enum Token {
     EOF,
 }
 
+#[derive(Clone)]
 pub struct TokenInfo {
     pub token: Token,
     pub line: i32,

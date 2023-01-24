@@ -1,5 +1,6 @@
+#![feature(is_some_and)]
+
 use anyhow::{anyhow, Result};
-// use log::{log_enabled, Level};
 use std::env::args;
 use std::fs;
 use std::io::{stdin, stdout, BufRead, Write};

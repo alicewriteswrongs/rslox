@@ -1,4 +1,5 @@
 use crate::token::{check_keyword, Token, TokenInfo};
+use log::{debug, log_enabled, Level};
 use std::cell::Cell;
 use std::iter::Peekable;
 use std::str::Chars;
@@ -78,6 +79,30 @@ impl<'a> Scanner<'a> {
         }
 
         self.create_token(Token::Error)
+    }
+
+    /// Run a 'debug scan' which:
+    /// 1. runs only in debug mode
+    /// 2. consumes all tokens and prints them to the console
+    pub fn debug_scan(&mut self) {
+        if log_enabled!(Level::Debug) {
+            let mut line = -1;
+            debug!("scanning tokens...");
+            loop {
+                let token_info = self.scan_token();
+
+                if token_info.line != line {
+                    debug!("{:04} {:?}", token_info.line, token_info.token);
+                    line = token_info.line;
+                } else {
+                    debug!("   | {:?}", token_info.token);
+                }
+
+                if token_info.token == Token::EOF {
+                    break;
+                }
+            }
+        }
     }
 
     /// provide one character of consume-if-matching lookahead
