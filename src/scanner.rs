@@ -137,7 +137,7 @@ impl<'a> Scanner<'a> {
     fn skip_whitespace(&mut self) {
         while let Some(c) = self.peek() {
             match c {
-                ' ' | '\r' | 't' => {
+                ' ' | '\r' | '\t' => {
                     self.advance();
                 }
                 '\n' => {
