@@ -28,6 +28,9 @@ pub enum Token {
     String(String),
     Number(f64),
 
+    // Source comment
+    Comment(String),
+
     // Keywords.
     And,
     Class,
@@ -51,7 +54,7 @@ pub enum Token {
     EOF,
 }
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct TokenInfo {
     pub token: Token,
     pub line: i32,
