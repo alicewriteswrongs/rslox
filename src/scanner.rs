@@ -416,4 +416,9 @@ mod tests {
             ],
         );
     }
+
+    #[test]
+    fn error_for_unterminated_string() {
+        test_tokens("\"this never ends", vec![Token::Error, Token::EOF]);
+    }
 }

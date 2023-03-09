@@ -43,21 +43,24 @@ impl Parser<'_> {
 
         loop {
             self.current = Some(self.scanner.scan_token());
-            if self
-                .current
-                .clone()
-                .is_some_and(|token| token.token != Token::Error)
-            {
+
+            let token_info = self.scanner.scan_token();
+
+            if token_info.token == Token::Error {
+                // some scanner error is being reported here
+                error_at(&token_info);
+                self.had_error = true;
+                self.current = Some(token_info);
+            } else {
+                self.current = Some(token_info);
                 break;
             }
-            error_at(&self.current.unwrap());
-            self.had_error = true;
         }
     }
 }
 
-fn error_at(token: &TokenInfo) {
-    let message = match token.token.clone() {
+fn error_at(token_info: &TokenInfo) {
+    let message = match token_info.token.clone() {
         Token::EOF => String::from(" at end"),
         Token::Identifier(identifier) => format!(" at '{}'", identifier),
         Token::String(str) => format!(" at '{}'", str),
@@ -65,5 +68,5 @@ fn error_at(token: &TokenInfo) {
         _ => String::from(""),
     };
 
-    error!("[line {}] Error{}", token.line, message);
+    error!("[line {}] Error{}", token_info.line, message);
 }
