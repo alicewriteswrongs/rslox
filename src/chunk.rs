@@ -37,6 +37,8 @@ pub struct OpcodeLine {
     line_number: i32,
 }
 
+/// A Chunk represents a unit of compiled bytecode which can then be interpreted by the virtual
+/// machine
 #[derive(Debug)]
 pub struct Chunk {
     pub code: Vec<OpCode>,
