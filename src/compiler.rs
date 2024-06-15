@@ -103,18 +103,20 @@ impl Parser<'_> {
     // parser itself, I'm not sure this can be easily ported to Rust
     // instead, lets read through the whole chapter, understand how the Pratt parser works,
     // and then implement our own.
-    // fn expression(self) {
-    //     unimplemented!();
-    // }
+    fn expression(self) {
+        return self;
+        
+    }
 
-    // fn number(self, value: Value) {
-    //     self.emit_constant(value);
-    // }
+    fn number(self, value: Value) {
+        self.emit_constant(value);
+    }
 
-    // fn grouping(self) {
-    //     self.expression();
-    //     self.consume(Token::RightParen, String::from("Expect ')' after expression."));
-    // }
+    fn grouping(self) {
+        self.expression();
+        self.consume(Token::RightParen, String::from("Expect ')' after expression."));
+    }
+
 
     // fn unary(self) {
 }
@@ -131,4 +133,21 @@ fn error_message_for(token_info: &TokenInfo) -> String {
 
 fn error_at(token_info: &TokenInfo, message: String) {
     error!("[line {}] Error{}", token_info.line, message);
+}
+
+enum Precedence {
+  PrecNone,
+  PrecAssignment,  // =
+  PrecOr,          // or
+  PrecAnd,         // and
+  PrecEquality,    // == !=
+  PrecComparison,  // < > <= >=
+  PrecTerm,        // + -
+  PrecFactor,      // * /
+  PrecUnary,       // ! -
+  PrecCall,        // . ()
+  PrecPrimary
+}
+
+fn precedence_for_op(op: Token) -> Precedence {
 }
